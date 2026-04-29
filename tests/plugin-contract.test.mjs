@@ -1,4 +1,6 @@
 import fs from "node:fs";
+import { spawnSync } from "node:child_process";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -52,4 +54,52 @@ test("README documents the review quick command", () => {
 
   assert.match(readme, /\/claude:review/);
   assert.match(readme, /uncommitted/i);
+});
+
+test("quick install script registers the local plugin marketplace entry", () => {
+  const script = readText("install.sh");
+
+  assert.match(script, /git@github\.com:chuntaojun\/claude-plugin-codex\.git/);
+  assert.match(script, /MARKETPLACE_PATH/);
+  assert.match(script, /claude-plugin-codex/);
+  assert.match(script, /\/claude:setup/);
+});
+
+test("quick install script writes marketplace entry for configured install dir", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "claude-plugin-install-test-"));
+  const sourceRepo = path.join(tmp, "source.git");
+  const installDir = path.join(tmp, "home", "plugins", "claude");
+  const marketplacePath = path.join(tmp, "home", ".agents", "plugins", "marketplace.json");
+
+  let result = spawnSync("git", ["clone", "--bare", ROOT, sourceRepo], {
+    encoding: "utf8"
+  });
+  assert.equal(result.status, 0, result.stderr);
+
+  result = spawnSync("bash", [path.join(ROOT, "install.sh")], {
+    cwd: tmp,
+    env: {
+      ...process.env,
+      CLAUDE_PLUGIN_CODEX_REPO: sourceRepo,
+      CLAUDE_PLUGIN_CODEX_INSTALL_DIR: installDir,
+      CLAUDE_PLUGIN_CODEX_MARKETPLACE: marketplacePath
+    },
+    encoding: "utf8"
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  const marketplace = JSON.parse(fs.readFileSync(marketplacePath, "utf8"));
+  const entry = marketplace.plugins.find((plugin) => plugin.name === "claude");
+  assert.equal(entry.source.source, "local");
+  assert.equal(entry.source.path, "./plugins/claude");
+  assert.equal(entry.policy.installation, "AVAILABLE");
+  assert.equal(entry.policy.authentication, "ON_INSTALL");
+});
+
+test("README documents curl quick install", () => {
+  const readme = readText("README.md");
+
+  assert.match(readme, /curl -fsSL/);
+  assert.match(readme, /install\.sh/);
+  assert.match(readme, /Restart Codex/i);
 });

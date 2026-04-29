@@ -12,6 +12,7 @@
 - [x] Address code review feedback: strict MCP argument validation, safer permissions, protocol fixes, cwd normalization, and spawn-error reporting.
 - [x] Add `/claude:review` quick command for implementation review of current uncommitted git changes.
 - [x] Polish README with install, usage, runtime, MCP, and development instructions before publishing.
+- [x] Add quick install script for local Codex plugin marketplace registration.
 
 ## Review
 
@@ -40,3 +41,7 @@
 - Publishing follow-up:
   - Added `.gitignore` and MIT `LICENSE`.
   - Expanded README with requirements, install notes, command examples, MCP tool arguments, and development checks.
+- Installer follow-up:
+  - Added `install.sh` for `curl | bash` quick install.
+  - The installer clones or updates the plugin, writes a plugin-creator-compatible local marketplace entry, and prints restart plus `/claude:setup` instructions.
+  - Added tests that execute the installer against a temporary bare repo and verify the generated marketplace entry.

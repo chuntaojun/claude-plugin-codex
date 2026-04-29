@@ -20,7 +20,35 @@ claude --version
 claude auth status
 ```
 
-## Install
+## Quick Install
+
+Run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/chuntaojun/claude-plugin-codex/main/install.sh | bash
+```
+
+The installer clones or updates the plugin at `~/plugins/claude` and registers it in:
+
+```text
+~/.agents/plugins/marketplace.json
+```
+
+Then restart Codex and run:
+
+```text
+/claude:setup
+```
+
+You can override install locations:
+
+```bash
+CLAUDE_PLUGIN_CODEX_INSTALL_DIR="$HOME/plugins/claude" \
+CLAUDE_PLUGIN_CODEX_MARKETPLACE="$HOME/.agents/plugins/marketplace.json" \
+curl -fsSL https://raw.githubusercontent.com/chuntaojun/claude-plugin-codex/main/install.sh | bash
+```
+
+## Manual Install
 
 Clone the plugin:
 
