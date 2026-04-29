@@ -168,7 +168,7 @@ main() {
   if command -v claude >/dev/null 2>&1; then
     log "Claude CLI: $(claude --version 2>/dev/null || printf 'installed')"
   else
-    log "Claude CLI was not found on PATH. Install Claude Code before using /claude:* commands."
+    log "Claude CLI was not found on PATH. Install Claude Code before using \$claude requests."
   fi
 
   cat <<EOF
@@ -178,9 +178,9 @@ Next steps:
 2. Install or enable the "Claude" plugin from the local marketplace if Codex does not auto-enable it.
 3. Run:
 
-   /claude:setup
+   \$claude setup
 
-If the slash command still does not appear, run:
+If the Claude plugin still does not appear, run:
 
    codex plugin marketplace add "$HOME"
 

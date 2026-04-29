@@ -49,10 +49,10 @@ test("commands route through MCP tools instead of plugin-root shell paths", () =
   assert.doesNotMatch(reviewCommand, /CODEX_PLUGIN_ROOT/);
 });
 
-test("README documents the review quick command", () => {
+test("README documents the review quick request", () => {
   const readme = readText("README.md");
 
-  assert.match(readme, /\/claude:review/);
+  assert.match(readme, /\$claude review/);
   assert.match(readme, /uncommitted/i);
 });
 
@@ -63,7 +63,7 @@ test("quick install script registers the local plugin marketplace entry", () => 
   assert.match(script, /MARKETPLACE_PATH/);
   assert.match(script, /codex plugin marketplace add/);
   assert.match(script, /claude-plugin-codex/);
-  assert.match(script, /\/claude:setup/);
+  assert.match(script, /\\\$claude setup/);
 });
 
 test("quick install script writes marketplace entry for configured install dir", () => {
@@ -142,6 +142,7 @@ test("README documents curl quick install", () => {
   assert.match(readme, /curl -fsSL/);
   assert.match(readme, /install\.sh/);
   assert.match(readme, /codex plugin marketplace add "\$HOME"/);
+  assert.match(readme, /Current Codex CLI `0\.125\.0` does not expose plugin `commands\/` files as `\/claude:\*` slash commands/);
   assert.match(readme, /Restart Codex/i);
 });
 
@@ -152,8 +153,9 @@ test("Chinese README mirrors install and command usage", () => {
   assert.match(english, /README\.zh-CN\.md/);
   assert.match(chinese, /README\.md/);
   assert.match(chinese, /快速安装/);
-  assert.match(chinese, /\/claude:setup/);
-  assert.match(chinese, /\/claude:task/);
-  assert.match(chinese, /\/claude:review/);
+  assert.match(chinese, /\$claude setup/);
+  assert.match(chinese, /\$claude task/);
+  assert.match(chinese, /\$claude review/);
+  assert.match(chinese, /不会把 plugin 里的 `commands\/` 文件暴露成 `\/claude:\*` slash command/);
   assert.match(chinese, /bypassPermissions/);
 });

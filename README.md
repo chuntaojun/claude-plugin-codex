@@ -37,22 +37,16 @@ The installer clones or updates the plugin at `~/plugins/claude`, writes the loc
 codex plugin marketplace add "$HOME"
 ```
 
-Then restart Codex and run:
-
-```text
-/claude:setup
-```
-
-If `/claude:setup` does not appear after restart, run this once and start a new Codex session:
-
-```bash
-codex plugin marketplace add "$HOME"
-```
-
-You can still invoke the MCP tool path directly from Codex with:
+Then restart Codex and invoke the plugin with Codex's plugin mention syntax:
 
 ```text
 $claude setup
+```
+
+If Codex does not expose the Claude plugin after restart, run this once and start a new Codex session:
+
+```bash
+codex plugin marketplace add "$HOME"
 ```
 
 You can override install locations:
@@ -82,24 +76,30 @@ The plugin root is the repository root. Codex should discover:
 
 - `.codex-plugin/plugin.json`
 - `.mcp.json`
-- `commands/*.md`
 
 After enabling the plugin, verify it from Codex:
 
 ```text
-/claude:setup
+$claude setup
 ```
 
-## Commands
+## Usage From Codex
 
-- `/claude:setup` checks whether `claude` is installed and available.
-- `/claude:task <prompt>` calls the bundled `claude_task` MCP tool, runs `claude --print` in the current workspace, and returns the result.
-- `/claude:review [focus]` asks Claude to review current uncommitted git changes, including staged and unstaged changes, for implementation reasonableness.
+Use `$claude ...` in Codex. That explicitly selects this plugin, then Codex can call the bundled
+MCP tools (`claude_setup` and `claude_task`) and return Claude's result into the current agent.
+
+Current Codex CLI `0.125.0` does not expose plugin `commands/` files as `/claude:*` slash commands.
+The `commands/` directory is kept as reference material for compatible or future command surfaces,
+but the supported invocation path is `$claude`.
+
+- `$claude setup` checks whether `claude` is installed and available.
+- `$claude task: <prompt>` calls the bundled `claude_task` MCP tool, runs `claude --print` in the current workspace, and returns the result.
+- `$claude review current uncommitted changes...` asks Claude to review current staged and unstaged git changes for implementation reasonableness.
 
 ### Setup
 
 ```text
-/claude:setup
+$claude setup
 ```
 
 Use this first. It checks whether Codex can reach the Claude CLI.
@@ -107,9 +107,9 @@ Use this first. It checks whether Codex can reach the Claude CLI.
 ### Delegate A Task
 
 ```text
-/claude:task investigate why the tests are failing
-/claude:task --model sonnet --effort high analyze docs/tasks/plan.md
-/claude:task --permission-mode acceptEdits implement the smallest safe fix
+$claude task: investigate why the tests are failing
+$claude task with model sonnet and high effort: analyze docs/tasks/plan.md
+$claude task with permission mode acceptEdits: implement the smallest safe fix
 ```
 
 By default, task delegation uses Claude's highest permission path:
@@ -123,12 +123,12 @@ Pass `--permission-mode <mode>` only when you want to lower permissions for a ru
 ### Review Current Uncommitted Changes
 
 ```text
-/claude:review
-/claude:review focus on whether this is over-engineered
-/claude:review 重点看并发和错误处理是否合理
+$claude review current uncommitted changes
+$claude review current uncommitted changes, focus on whether this is over-engineered
+$claude review 当前未提交代码，重点看并发和错误处理是否合理
 ```
 
-`/claude:review` asks Claude to inspect the current staged and unstaged git diff. It is intended
+The review request asks Claude to inspect the current staged and unstaged git diff. It is intended
 for implementation-reasonableness review and tells Claude not to modify files.
 
 ### Analyze A File
@@ -136,7 +136,7 @@ for implementation-reasonableness review and tells Claude not to modify files.
 For files inside the current workspace, use a relative path:
 
 ```text
-/claude:task 请阅读 docs/tasks/plan.md，分析这个方案的风险、遗漏和更优雅的实现路径
+$claude 请阅读 docs/tasks/plan.md，分析这个方案的风险、遗漏和更优雅的实现路径
 ```
 
 For files outside the current workspace, run the tool from that file's project root or pass that
@@ -205,7 +205,7 @@ node scripts/claude-companion.mjs setup --json
 ```text
 .codex-plugin/plugin.json     Codex plugin manifest
 .mcp.json                     Local MCP server registration
-commands/                     Codex slash command instructions
+commands/                     Reference command prompts; not exposed as /claude:* in Codex CLI 0.125.0
 scripts/claude-companion.mjs  Claude CLI bridge
 scripts/claude-mcp-server.mjs MCP stdio server exposing claude_setup/claude_task
 tests/                        Node test suite and fake Claude fixture

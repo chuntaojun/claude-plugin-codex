@@ -41,23 +41,19 @@ curl -fsSL https://raw.githubusercontent.com/chuntaojun/claude-plugin-codex/main
 codex plugin marketplace add "$HOME"
 ```
 
-然后重启 Codex，并运行：
+然后重启 Codex，用插件 mention 方式调用：
 
 ```text
-/claude:setup
+$claude setup
 ```
 
-如果重启后仍然看不到 `/claude:setup`，先手动运行一次：
+如果重启后 Codex 仍然没有暴露 Claude 插件，先手动运行一次：
 
 ```bash
 codex plugin marketplace add "$HOME"
 ```
 
-然后新开一个 Codex 会话。MCP 工具路径仍可直接使用：
-
-```text
-$claude setup
-```
+然后新开一个 Codex 会话。
 
 可以用环境变量覆盖安装位置：
 
@@ -85,24 +81,29 @@ codex plugin marketplace add "$HOME"
 
 - `.codex-plugin/plugin.json`
 - `.mcp.json`
-- `commands/*.md`
 
 启用后，在 Codex 中运行：
 
 ```text
-/claude:setup
+$claude setup
 ```
 
-## 命令
+## 在 Codex 中使用
 
-- `/claude:setup`：检查 `claude` 是否已安装且可用。
-- `/claude:task <prompt>`：调用内置 `claude_task` MCP 工具，在当前工作区运行 `claude --print`，并返回结果。
-- `/claude:review [focus]`：让 Claude 审查当前 git 未提交改动，包括 staged 和 unstaged changes，重点看实现合理性。
+在 Codex 里使用 `$claude ...`。这会显式选择 Claude 插件，然后 Codex 可以调用插件暴露的
+MCP tools（`claude_setup` 和 `claude_task`），并把 Claude 的结果带回当前 agent。
+
+当前 Codex CLI `0.125.0` 不会把 plugin 里的 `commands/` 文件暴露成 `/claude:*` slash command。
+`commands/` 目录保留为兼容或未来命令面的参考材料；当前稳定用法是 `$claude`。
+
+- `$claude setup`：检查 `claude` 是否已安装且可用。
+- `$claude task: <prompt>`：调用内置 `claude_task` MCP 工具，在当前工作区运行 `claude --print`，并返回结果。
+- `$claude review 当前未提交代码...`：让 Claude 审查当前 staged 和 unstaged git diff，重点看实现合理性。
 
 ### 初始化检查
 
 ```text
-/claude:setup
+$claude setup
 ```
 
 建议安装后先运行它，确认 Codex 能访问 Claude CLI。
@@ -110,9 +111,9 @@ codex plugin marketplace add "$HOME"
 ### 委托任务给 Claude
 
 ```text
-/claude:task investigate why the tests are failing
-/claude:task --model sonnet --effort high analyze docs/tasks/plan.md
-/claude:task --permission-mode acceptEdits implement the smallest safe fix
+$claude task: investigate why the tests are failing
+$claude task with model sonnet and high effort: analyze docs/tasks/plan.md
+$claude task with permission mode acceptEdits: implement the smallest safe fix
 ```
 
 默认情况下，任务委托使用 Claude 的最高权限路径：
@@ -124,25 +125,25 @@ codex plugin marketplace add "$HOME"
 如果想降低某次运行的权限，显式传：
 
 ```text
-/claude:task --permission-mode default 做一次只读分析
+$claude task with permission mode default: 做一次只读分析
 ```
 
 ### 审查当前未提交代码
 
 ```text
-/claude:review
-/claude:review focus on whether this is over-engineered
-/claude:review 重点看并发和错误处理是否合理
+$claude review current uncommitted changes
+$claude review current uncommitted changes, focus on whether this is over-engineered
+$claude review 当前未提交代码，重点看并发和错误处理是否合理
 ```
 
-`/claude:review` 会让 Claude 检查当前 staged 和 unstaged git diff。它用于审查实现合理性，并明确要求 Claude 不修改文件。
+review 请求会让 Claude 检查当前 staged 和 unstaged git diff。它用于审查实现合理性，并明确要求 Claude 不修改文件。
 
 ### 分析方案文件
 
 如果文件在当前 workspace 内，直接写相对路径：
 
 ```text
-/claude:task 请阅读 docs/tasks/plan.md，分析这个方案的风险、遗漏和更优雅的实现路径
+$claude 请阅读 docs/tasks/plan.md，分析这个方案的风险、遗漏和更优雅的实现路径
 ```
 
 如果文件不在当前 workspace 内，建议从包含该文件的项目根目录运行，或直接调用 MCP 工具时把 `cwd` 设成对应项目根目录。
@@ -224,7 +225,7 @@ node scripts/claude-companion.mjs setup --json
 ```text
 .codex-plugin/plugin.json     Codex plugin manifest
 .mcp.json                     本地 MCP server 注册
-commands/                     Codex slash command 指令
+commands/                     参考命令提示；Codex CLI 0.125.0 不会暴露为 /claude:*
 scripts/claude-companion.mjs  Claude CLI 桥接脚本
 scripts/claude-mcp-server.mjs MCP stdio server，暴露 claude_setup/claude_task
 tests/                        Node 测试和 fake Claude fixture
