@@ -34,16 +34,29 @@ curl -fsSL https://raw.githubusercontent.com/chuntaojun/claude-plugin-codex/main
 ~/plugins/claude
 ```
 
-并注册到本地 marketplace：
+并写入本地 marketplace，同时把这个 marketplace 注册到 Codex：
 
 ```text
 ~/.agents/plugins/marketplace.json
+codex plugin marketplace add "$HOME"
 ```
 
 然后重启 Codex，并运行：
 
 ```text
 /claude:setup
+```
+
+如果重启后仍然看不到 `/claude:setup`，先手动运行一次：
+
+```bash
+codex plugin marketplace add "$HOME"
+```
+
+然后新开一个 Codex 会话。MCP 工具路径仍可直接使用：
+
+```text
+$claude setup
 ```
 
 可以用环境变量覆盖安装位置：
@@ -62,7 +75,13 @@ Clone 仓库：
 git clone git@github.com:chuntaojun/claude-plugin-codex.git
 ```
 
-然后按你的 Codex 插件流程，把这个目录注册为本地 Codex plugin。插件根目录就是仓库根目录，Codex 应能发现：
+然后按你的 Codex 插件流程，把这个目录注册为本地 Codex plugin。如果走 home-local marketplace，需要确保 marketplace root 已注册：
+
+```bash
+codex plugin marketplace add "$HOME"
+```
+
+插件根目录就是仓库根目录，Codex 应能发现：
 
 - `.codex-plugin/plugin.json`
 - `.mcp.json`

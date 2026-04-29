@@ -61,6 +61,7 @@ test("quick install script registers the local plugin marketplace entry", () => 
 
   assert.match(script, /git@github\.com:chuntaojun\/claude-plugin-codex\.git/);
   assert.match(script, /MARKETPLACE_PATH/);
+  assert.match(script, /codex plugin marketplace add/);
   assert.match(script, /claude-plugin-codex/);
   assert.match(script, /\/claude:setup/);
 });
@@ -82,7 +83,8 @@ test("quick install script writes marketplace entry for configured install dir",
       ...process.env,
       CLAUDE_PLUGIN_CODEX_REPO: sourceRepo,
       CLAUDE_PLUGIN_CODEX_INSTALL_DIR: installDir,
-      CLAUDE_PLUGIN_CODEX_MARKETPLACE: marketplacePath
+      CLAUDE_PLUGIN_CODEX_MARKETPLACE: marketplacePath,
+      CLAUDE_PLUGIN_CODEX_SKIP_CODEX_MARKETPLACE_ADD: "1"
     },
     encoding: "utf8"
   });
@@ -96,11 +98,50 @@ test("quick install script writes marketplace entry for configured install dir",
   assert.equal(entry.policy.authentication, "ON_INSTALL");
 });
 
+test("quick install script registers the home root with Codex CLI", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "claude-plugin-codex-cli-test-"));
+  const sourceRepo = path.join(tmp, "source.git");
+  const home = path.join(tmp, "home");
+  const binDir = path.join(tmp, "bin");
+  const codexLog = path.join(tmp, "codex-args.log");
+  const installDir = path.join(home, "plugins", "claude");
+  const marketplacePath = path.join(home, ".agents", "plugins", "marketplace.json");
+
+  fs.mkdirSync(binDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(binDir, "codex"),
+    "#!/usr/bin/env bash\nprintf '%s\\n' \"$*\" >> \"$CODEX_CALL_LOG\"\n",
+    { mode: 0o755 }
+  );
+
+  let result = spawnSync("git", ["clone", "--bare", ROOT, sourceRepo], {
+    encoding: "utf8"
+  });
+  assert.equal(result.status, 0, result.stderr);
+
+  result = spawnSync("bash", [path.join(ROOT, "install.sh")], {
+    cwd: tmp,
+    env: {
+      ...process.env,
+      PATH: `${binDir}${path.delimiter}${process.env.PATH}`,
+      CODEX_CALL_LOG: codexLog,
+      CLAUDE_PLUGIN_CODEX_REPO: sourceRepo,
+      CLAUDE_PLUGIN_CODEX_INSTALL_DIR: installDir,
+      CLAUDE_PLUGIN_CODEX_MARKETPLACE: marketplacePath
+    },
+    encoding: "utf8"
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(fs.readFileSync(codexLog, "utf8").trim(), `plugin marketplace add ${home}`);
+});
+
 test("README documents curl quick install", () => {
   const readme = readText("README.md");
 
   assert.match(readme, /curl -fsSL/);
   assert.match(readme, /install\.sh/);
+  assert.match(readme, /codex plugin marketplace add "\$HOME"/);
   assert.match(readme, /Restart Codex/i);
 });
 

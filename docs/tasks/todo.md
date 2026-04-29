@@ -14,6 +14,7 @@
 - [x] Polish README with install, usage, runtime, MCP, and development instructions before publishing.
 - [x] Add quick install script for local Codex plugin marketplace registration.
 - [x] Add Chinese README.
+- [x] Diagnose local slash command registration failure and register the home-local marketplace source through Codex CLI.
 
 ## Review
 
@@ -48,3 +49,7 @@
   - Added tests that execute the installer against a temporary bare repo and verify the generated marketplace entry.
 - Documentation follow-up:
   - Added `README.zh-CN.md` and linked it from the English README.
+- Slash command registration follow-up:
+  - Root cause: the installer wrote `~/.agents/plugins/marketplace.json`, but did not also run `codex plugin marketplace add "$HOME"`, so Codex could have an enabled MCP plugin cache without a fully registered local marketplace source.
+  - Updated the installer to register the home-local marketplace root with Codex when `codex` is available.
+  - Updated English and Chinese docs with the manual registration command and `$claude setup` MCP fallback.

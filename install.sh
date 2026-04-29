@@ -6,6 +6,7 @@ PLUGIN_NAME="claude"
 INSTALL_ROOT="${CLAUDE_PLUGIN_CODEX_INSTALL_ROOT:-$HOME/plugins}"
 INSTALL_DIR="${CLAUDE_PLUGIN_CODEX_INSTALL_DIR:-$INSTALL_ROOT/$PLUGIN_NAME}"
 MARKETPLACE_PATH="${CLAUDE_PLUGIN_CODEX_MARKETPLACE:-$HOME/.agents/plugins/marketplace.json}"
+SKIP_CODEX_MARKETPLACE_ADD="${CLAUDE_PLUGIN_CODEX_SKIP_CODEX_MARKETPLACE_ADD:-0}"
 
 log() {
   printf '[claude-plugin-codex] %s\n' "$*"
@@ -110,12 +111,56 @@ fs.writeFileSync(marketplacePath, `${JSON.stringify(marketplace, null, 2)}\n`);
 NODE
 }
 
+codex_marketplace_root() {
+  MARKETPLACE_PATH="$MARKETPLACE_PATH" node <<'NODE'
+const path = require('node:path');
+
+const marketplacePath = path.resolve(process.env.MARKETPLACE_PATH);
+const marketplaceFile = path.basename(marketplacePath);
+const pluginsDir = path.dirname(marketplacePath);
+const agentsDir = path.dirname(pluginsDir);
+
+if (
+  marketplaceFile === 'marketplace.json' &&
+  path.basename(pluginsDir) === 'plugins' &&
+  path.basename(agentsDir) === '.agents'
+) {
+  process.stdout.write(path.dirname(agentsDir));
+}
+NODE
+}
+
+register_codex_marketplace() {
+  if [ "$SKIP_CODEX_MARKETPLACE_ADD" = "1" ]; then
+    log "Skipped Codex marketplace registration because CLAUDE_PLUGIN_CODEX_SKIP_CODEX_MARKETPLACE_ADD=1"
+    return
+  fi
+
+  local marketplace_root
+  marketplace_root="$(codex_marketplace_root)"
+
+  if [ -z "$marketplace_root" ]; then
+    log "Skipped Codex marketplace registration for non-standard marketplace path: $MARKETPLACE_PATH"
+    log "To register manually, keep marketplace.json at <root>/.agents/plugins/marketplace.json and run: codex plugin marketplace add <root>"
+    return
+  fi
+
+  if ! command -v codex >/dev/null 2>&1; then
+    log "Codex CLI was not found on PATH. Register the marketplace later with:"
+    log "codex plugin marketplace add \"$marketplace_root\""
+    return
+  fi
+
+  codex plugin marketplace add "$marketplace_root"
+}
+
 main() {
   require_command git
   require_command node
 
   install_or_update_repo
   update_marketplace
+  register_codex_marketplace
 
   log "Installed plugin at $INSTALL_DIR"
   log "Updated marketplace at $MARKETPLACE_PATH"
@@ -129,11 +174,15 @@ main() {
   cat <<EOF
 
 Next steps:
-1. Restart Codex so it reloads plugin marketplaces.
+1. Restart Codex or start a new session so it reloads plugin marketplaces.
 2. Install or enable the "Claude" plugin from the local marketplace if Codex does not auto-enable it.
 3. Run:
 
    /claude:setup
+
+If the slash command still does not appear, run:
+
+   codex plugin marketplace add "$HOME"
 
 EOF
 }

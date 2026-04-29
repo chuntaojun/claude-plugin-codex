@@ -30,16 +30,29 @@ Run:
 curl -fsSL https://raw.githubusercontent.com/chuntaojun/claude-plugin-codex/main/install.sh | bash
 ```
 
-The installer clones or updates the plugin at `~/plugins/claude` and registers it in:
+The installer clones or updates the plugin at `~/plugins/claude`, writes the local marketplace entry, and registers that marketplace with Codex:
 
 ```text
 ~/.agents/plugins/marketplace.json
+codex plugin marketplace add "$HOME"
 ```
 
 Then restart Codex and run:
 
 ```text
 /claude:setup
+```
+
+If `/claude:setup` does not appear after restart, run this once and start a new Codex session:
+
+```bash
+codex plugin marketplace add "$HOME"
+```
+
+You can still invoke the MCP tool path directly from Codex with:
+
+```text
+$claude setup
 ```
 
 You can override install locations:
@@ -59,6 +72,12 @@ git clone git@github.com:chuntaojun/claude-plugin-codex.git
 ```
 
 Install or register the cloned folder as a local Codex plugin using your Codex plugin workflow.
+For a home-local install, ensure the marketplace root is registered:
+
+```bash
+codex plugin marketplace add "$HOME"
+```
+
 The plugin root is the repository root. Codex should discover:
 
 - `.codex-plugin/plugin.json`
