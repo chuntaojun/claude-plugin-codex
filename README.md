@@ -1,5 +1,7 @@
 # Claude Plugin For Codex
 
+[中文说明](./README.zh-CN.md)
+
 Use Claude CLI from inside Codex and return Claude's final result to the current Codex agent.
 
 This plugin is useful when you want Codex to delegate a focused pass to Claude Code, such as

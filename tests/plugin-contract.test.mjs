@@ -103,3 +103,16 @@ test("README documents curl quick install", () => {
   assert.match(readme, /install\.sh/);
   assert.match(readme, /Restart Codex/i);
 });
+
+test("Chinese README mirrors install and command usage", () => {
+  const english = readText("README.md");
+  const chinese = readText("README.zh-CN.md");
+
+  assert.match(english, /README\.zh-CN\.md/);
+  assert.match(chinese, /README\.md/);
+  assert.match(chinese, /快速安装/);
+  assert.match(chinese, /\/claude:setup/);
+  assert.match(chinese, /\/claude:task/);
+  assert.match(chinese, /\/claude:review/);
+  assert.match(chinese, /bypassPermissions/);
+});
